@@ -26,12 +26,42 @@
     (xft:cache-fonts))
 
 (set-font
- (list
-  (make-instance 'xft:font
+ (make-instance 'xft:font
                  :family "JetBrains Mono"
                  :subfamily "Regular"
-		 :size 10
-		 :antialias t)))
+		 :size 13
+		 :antialias t))
+
+;; HACK
+;; define a function to clear caches for clx-truetype
+;; run at startup and on a timer to prevent memory leaks
+(defcommand clx-clean() ()
+	    (lambda ()
+	      (loop for font in (screen-fonts (current-screen))
+		    when (typep font 'xft:font)
+		    do (clrhash (xft::font-string-line-bboxes font))
+		    (clrhash (xft::font-string-line-alpha-maps font))
+		    (clrhash (xft::font-string-bboxes font))
+		    (clrhash (xft::font-string-alpha-maps font)))))
+
+(run-with-timer 900 900 (clx-clean))
+
+;; (set-font "-misc-jetbrains mono-medium-r-normal-*-17-*-*-*-m-0-iso10646-1")
+
+;; async-run
+(defparameter *async-shell* (uiop:launch-program "bash" :input :stream :output :stream))
+(defun async-run (command)
+  (write-line command (uiop:process-info-input *async-shell*))
+  (force-output (uiop:process-info-input *async-shell*))
+  (let* ((output-string (read-line (uiop:process-info-output *async-shell*)))
+         (stream (uiop:process-info-output *async-shell*)))
+    (if (listen stream)
+        (loop while (listen stream)
+              do (setf output-string (concatenate 'string
+                                                  output-string
+                                                  '(#\Newline)
+                                                  (read-line stream)))))
+    output-string))
 
 ;; stumptray
 (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/stumptray"))
@@ -66,26 +96,29 @@
 (define-key *top-map* (kbd "XF86MonBrightnessDown") "backlight-decrease")
 
 ;; battery-portable %B
-(add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/battery-portable"))
-(load-module "battery-portable")
+;; (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/battery-portable"))
+;; (load-module "battery-portable")
+
+(defun get-battery()
+  (async-run "acpi | head -n 1 | sed 's/Battery 0: //g'"))
 
 ;; cpu %c
-(add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/cpu"))
-(load-module "cpu")
+;; (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/cpu"))
+;; (load-module "cpu")
 
 ;; mem %M
-(add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/mem"))
-(load-module "mem")
+;; (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/mem"))
+;; (load-module "mem")
 
 ;; net %l
-(add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/net"))
-(load-module "net")
+;; (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/net"))
+;; (load-module "net")
 
 ;; swm-gaps
-(add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/util/swm-gaps"))
-(load-module "swm-gaps")
+;; (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/util/swm-gaps"))
+;; (load-module "swm-gaps")
 
-(setf swm-gaps:*inner-gaps-size* 5)
+;; (setf swm-gaps:*inner-gaps-size* 5)
 
 ;; (swm-gaps:toggle-gaps-on)
 
@@ -93,29 +126,43 @@
 (which-key-mode)
 
 ;; startup
-(run-shell-command "autorandr --change")
+(defcommand system-refresh() ()
+	    (run-shell-command "autorandr --change")
+	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 1 'key +ctrl +z -z -ctrl'")
+	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 2 'key +ctrl +y -y -ctrl'")
+	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 3 'key +ctrl +1 -1 -ctrl'")
+	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 8 'key +ctrl +6 -6 -ctrl'")
+	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 9 'key +ctrl +n -n -ctrl'")
+	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 10 'key +ctrl +o -o -ctrl'")
+	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 11 'key +ctrl +s -s -ctrl'")
+	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 12 'key +ctrl +e -e -ctrl'")
+	    (run-shell-command "xinput map-to-output 'HID 256c:006d Pen stylus' DisplayPort-2")
+	    (run-shell-command "xinput map-to-output 'HID 256c:006d Pad pad' DisplayPort-2"))
+
+(system-refresh)
+(clx-clean)
 (run-shell-command "bash ~/.stumpwm.d/update-contrib.sh")
 (run-shell-command "caffeine")
+(run-shell-command "caprine")
 (run-shell-command "discord --start-minimized")
-(run-shell-command "emacs --daemon")
+(run-shell-command "kitty emacs --daemon")
 (run-shell-command "ibus-daemon")
 (run-shell-command "nm-applet")
 (run-shell-command "numlockx")
-(run-shell-command "picom -b --experimental-backends")
+(run-shell-command "picom -b")
+(run-shell-command "blueman-applet")
 (run-shell-command "pulseeffects --gapplication-service")
 (run-shell-command "solaar -w hide")
+(run-shell-command "udiskie -t")
 (run-shell-command "xsetroot -cursor_name left_ptr")
-
-;; fix scrolling in some programs
-(setf (getenv "GDK_CORE_DEVICE_EVENTS") "1")
 
 ;; set prefix key to Super + t
 (set-prefix-key (kbd "s-t"))
 
-;; window numbers automatically
+;; automatic window numbers
 (add-hook *destroy-window-hook* #'(lambda (win) (repack-window-numbers)))
 
-;; change window focus on mouse click
+;; focus on mouse click
 (setf *mouse-focus-policy* :click)
 
 ;; theming
@@ -128,7 +175,6 @@
   (set-border-color bg)
   (set-focus-color hl)
   (set-unfocus-color bg)
-  (setf border-width 1)
 
   (setf *mode-line-foreground-color* fg
         *mode-line-border-width* 1
@@ -145,8 +191,6 @@
       *message-window-padding* 15
       *message-window-y-padding* 20)
 
-(setf *menu-maximum-height* 15)
-
 (setf *colors*
       '("#1e2029" ;; 0 black
 	"#ff5555" ;; 1 red
@@ -162,6 +206,21 @@
 
 ;; commands and keybinds
 
+(defvar *my-map* (make-sparse-keymap))
+
+(define-key *root-map* (kbd "O") '*my-map*)
+
+(defcommand chrome() ()
+	    (run-shell-command "google-chrome-stable --enable-features=VaapiVideoDecoder,WebUIDarkMode --use-gl=desktop --disable-features=UseOzonePlatform --force-dark-mode"))
+(defcommand chrome-incognito() ()
+	    (run-shell-command (concat "google-chrome-stable --enable-features=VaapiVideoDecoder,WebUIDarkMode --use-gl=desktop --disable-features=UseOzonePlatform --force-dark-mode" " -incognito")))
+(defcommand weather() ()
+	    (run-shell-command "kitty -e \"while true; curl wttr.in; sleep 10; clear; end\""))
+
+(define-key *my-map* (kbd "b") "chrome")
+(define-key *my-map* (kbd "n") "chrome-incognito")
+(define-key *my-map* (kbd "w") "weather")
+
 (defun rofi (mode)
   (run-shell-command (concat "rofi -show " mode)))
 
@@ -176,27 +235,104 @@
 (define-key *root-map* (kbd "@") "rofi-drun")
 (define-key *root-map* (kbd "#") "rofi-window")
 
+(define-key *root-map* (kbd "ESC") "system-refresh")
+
+(defvar *maim-map* (make-sparse-keymap))
+
+(define-key *my-map* (kbd "m") '*maim-map*)
+
+(defun maim (mode)
+  (run-shell-command (concat "maim " mode)))
+
+(defcommand maim-clip() ()
+	    (maim "-s -m 10 -u | xclip -selection clipboard -t image/png -i"))
+(defcommand maim-shot() ()
+	    (maim "-s -m 10 ~/Pictures/$(date +%s).png"))
+
+(define-key *maim-map* (kbd "c") "maim-clip")
+(define-key *maim-map* (kbd "s") "maim-shot")
+
+(defvar *playerctl-map* (make-sparse-keymap))
+
+(define-key *my-map* (kbd "p") '*playerctl-map*)
+
+(defun playerctl (mode)
+  (run-shell-command (concat "playerctl " mode)))
+
+(defcommand playerctl-play-pause() ()
+	    (playerctl "play-pause"))
+(defcommand playerctl-status() ()
+	    (run-shell-command "notify-send -t 5000 \"$(playerctl metadata --format \"{{ status }}: {{ artist }} - {{ title }}\")\""))
+(defcommand playerctl-next() ()
+	    (playerctl "next"))
+(defcommand playerctl-previous() ()
+	    (playerctl "previous"))
+
+(define-key *playerctl-map* (kbd "Up") "playerctl-play-pause")
+(define-key *playerctl-map* (kbd "Down") "playerctl-status")
+(define-key *playerctl-map* (kbd "Left") "playerctl-previous")
+(define-key *playerctl-map* (kbd "Right") "playerctl-next")
+
+(undefine-key *root-map* (kbd "c"))
+(undefine-key *root-map* (kbd "C-c"))
+
+(defcommand terminal() ()
+	    (run-shell-command "kitty"))
+
+(define-key *root-map* (kbd "c") "terminal")
+(define-key *root-map* (kbd "C-c") "terminal")
+
+(undefine-key *root-map* (kbd "e"))
+(undefine-key *root-map* (kbd "C-e"))
+
+(defvar *emacsclient-map* (make-sparse-keymap))
+
+(defcommand emacs() ()
+	    (run-shell-command "emacs"))
+(defcommand start-daemon() ()
+	    (run-shell-command "kitty emacs --daemon"))
+(defcommand emacsclient() ()
+	    (run-shell-command "emacsclient -c"))
+(defcommand eshell() ()
+	    (run-shell-command "emacsclient -c -e '(+eshell/here)'"))
+(defcommand vterm() ()
+	    (run-shell-command "emacsclient -c -e '(+vterm/here default-directory)'"))
+(defcommand dired() ()
+	    (run-shell-command "emacsclient -c -e '(dired default-directory)'"))
+
+(define-key *root-map* (kbd "e") "emacs")
+(define-key *root-map* (kbd "C-e") '*emacsclient-map*)
+
+(define-key *emacsclient-map* (kbd "s") "start-daemon")
+(define-key *emacsclient-map* (kbd "e") "emacsclient")
+(define-key *emacsclient-map* (kbd "t") "eshell")
+(define-key *emacsclient-map* (kbd "v") "vterm")
+(define-key *emacsclient-map* (kbd "d") "dired")
+
 ;; modeline
 (setf *window-format* " %n %s%m%c ")
 (setf *group-format* " %n %s %t ")
 (setf *screen-mode-line-format* (list " "
-				      "%h  "
+				      "%h "
 				      " "
 				      "^B^5%g^b "
 				      "^B^6%W^b "
 				      "^> "
-				      " ^7| "
-				      "^B^6%C^b "
+				      ;; " ^7| "
+				      ;; "^B^6%C^b "
+				      ;; "^7| "
+				      ;; "^B^6%M^b "
+				      ;; "^7| "
+				      ;; "^B^6%l^b "
 				      "^7| "
-				      "^B^6%M^b "
-				      "^7| "
-				      "^B^6%l^b "
-				      "^7| "
-				      "^B%B^b "
+				      ;; "^B%B^b "
+				      "^B"
+				      '(:eval (get-battery))
+				      "^b "
 				      "^7| "
 				      "^B^7%d^b "
 				      "^7| "
-				      "        "))
+				      "                 "))
 
 (setf *time-modeline-string* "%a %b %e  %k:%M:%S")
 
