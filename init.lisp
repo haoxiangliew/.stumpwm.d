@@ -29,8 +29,8 @@
  (make-instance 'xft:font
                  :family "JetBrains Mono"
                  :subfamily "Regular"
-		 :size 13
-		 :antialias t))
+		 :size 10))
+		 ;; :antialias t))
 
 ;; HACK
 ;; define a function to clear caches for clx-truetype
@@ -46,7 +46,7 @@
 
 (run-with-timer 900 900 (clx-clean))
 
-;; (set-font "-misc-jetbrains mono-medium-r-normal-*-17-*-*-*-m-0-iso10646-1")
+;; (set-font "-misc-jetbrains mono-medium-r-normal-*-13-*-*-*-m-0-iso10646-1")
 
 ;; async-run
 (defparameter *async-shell* (uiop:launch-program "bash" :input :stream :output :stream))
@@ -96,38 +96,47 @@
 (define-key *top-map* (kbd "XF86MonBrightnessDown") "backlight-decrease")
 
 ;; battery-portable %B
-;; (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/battery-portable"))
-;; (load-module "battery-portable")
+(add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/battery-portable"))
+(load-module "battery-portable")
 
-(defun get-battery()
-  (async-run "acpi | head -n 1 | sed 's/Battery 0: //g'"))
+(setf battery-portable::*no-battery-info* "(unknown)")
+
+;; (defun get-battery()
+;;   (async-run "acpi | head -n 1 | sed 's/Battery 0: //g'"))
 
 ;; cpu %c
-;; (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/cpu"))
-;; (load-module "cpu")
+(add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/cpu"))
+(load-module "cpu")
+
+(setf cpu::*cpu-modeline-fmt* "%c")
 
 ;; mem %M
-;; (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/mem"))
-;; (load-module "mem")
+(add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/mem"))
+(load-module "mem")
+
+(setf mem::*mem-modeline-fmt* "MEM: %p")
 
 ;; net %l
-;; (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/net"))
-;; (load-module "net")
+(add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/net"))
+(load-module "net")
 
 ;; swm-gaps
-;; (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/util/swm-gaps"))
-;; (load-module "swm-gaps")
+(add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/util/swm-gaps"))
+(load-module "swm-gaps")
 
-;; (setf swm-gaps:*inner-gaps-size* 5)
+(setf swm-gaps:*inner-gaps-size* 5)
 
-;; (swm-gaps:toggle-gaps-on)
+(swm-gaps:toggle-gaps-on)
 
 ;; which-key mode
 (which-key-mode)
 
 ;; startup
+(defcommand refresh-contrib() ()
+	    (run-shell-command "kitty -e '/home/haoxiangliew/.stumpwm.d/update-contrib.sh'"))
 (defcommand system-refresh() ()
 	    (run-shell-command "autorandr --change")
+	    (run-shell-command "feh --bg-scale ~/haoxiangliew/Wallpapers/eboy-dracula-tokyo.png")
 	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 1 'key +ctrl +z -z -ctrl'")
 	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 2 'key +ctrl +y -y -ctrl'")
 	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 3 'key +ctrl +1 -1 -ctrl'")
@@ -138,23 +147,26 @@
 	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 12 'key +ctrl +e -e -ctrl'")
 	    (run-shell-command "xinput map-to-output 'HID 256c:006d Pen stylus' DisplayPort-2")
 	    (run-shell-command "xinput map-to-output 'HID 256c:006d Pad pad' DisplayPort-2"))
+(defcommand system-startup() ()
+	    ;; (run-shell-command "bash ~/.stumpwm.d/update-contrib.sh")
+	    (run-shell-command "caffeine")
+	    (run-shell-command "caprine")
+	    (run-shell-command "discord --start-minimized")
+	    (run-shell-command "feh --bg-scale ~/haoxiangliew/Wallpapers/eboy-dracula-tokyo.png")
+	    (run-shell-command "kitty emacs --daemon")
+	    (run-shell-command "ibus-daemon")
+	    (run-shell-command "nm-applet")
+	    (run-shell-command "numlockx")
+	    (run-shell-command "picom -b --experimental-backends")
+	    (run-shell-command "blueman-applet")
+	    (run-shell-command "pulseeffects --gapplication-service")
+	    (run-shell-command "solaar -w hide")
+	    (run-shell-command "udiskie -t")
+	    (run-shell-command "xsetroot -cursor_name left_ptr"))
 
 (system-refresh)
+(system-startup)
 (clx-clean)
-(run-shell-command "bash ~/.stumpwm.d/update-contrib.sh")
-(run-shell-command "caffeine")
-(run-shell-command "caprine")
-(run-shell-command "discord --start-minimized")
-(run-shell-command "kitty emacs --daemon")
-(run-shell-command "ibus-daemon")
-(run-shell-command "nm-applet")
-(run-shell-command "numlockx")
-(run-shell-command "picom -b")
-(run-shell-command "blueman-applet")
-(run-shell-command "pulseeffects --gapplication-service")
-(run-shell-command "solaar -w hide")
-(run-shell-command "udiskie -t")
-(run-shell-command "xsetroot -cursor_name left_ptr")
 
 ;; set prefix key to Super + t
 (set-prefix-key (kbd "s-t"))
@@ -206,6 +218,23 @@
 
 ;; commands and keybinds
 
+(defun swap-groups (group1 group2)
+  (rotatef (slot-value group1 'number) (slot-value group2 'number)))
+(defun move-group-forward (&optional (group (current-group)))
+  (swap-groups group (next-group group (sort-groups (current-screen)))))
+(defun move-group-backward (&optional (group (current-group)))
+  (swap-groups group (next-group group (reverse (sort-groups (current-screen))))))
+
+(defcommand gbackward() ()
+	    (move-group-backward)
+	    (echo-groups (current-screen) *group-format*))
+(defcommand gforward() ()
+	    (move-group-forward)
+	    (echo-groups (current-screen) *group-format*))
+
+(define-key *groups-map* (kbd "Left") "gbackward")
+(define-key *groups-map* (kbd "Right") "gforward")
+
 (defvar *my-map* (make-sparse-keymap))
 
 (define-key *root-map* (kbd "O") '*my-map*)
@@ -214,12 +243,11 @@
 	    (run-shell-command "google-chrome-stable --enable-features=VaapiVideoDecoder,WebUIDarkMode --use-gl=desktop --disable-features=UseOzonePlatform --force-dark-mode"))
 (defcommand chrome-incognito() ()
 	    (run-shell-command (concat "google-chrome-stable --enable-features=VaapiVideoDecoder,WebUIDarkMode --use-gl=desktop --disable-features=UseOzonePlatform --force-dark-mode" " -incognito")))
-(defcommand weather() ()
-	    (run-shell-command "kitty -e \"while true; curl wttr.in; sleep 10; clear; end\""))
+(defcommand lock() ()
+	    (run-shell-command "xautolock -locknow"))
 
 (define-key *my-map* (kbd "b") "chrome")
 (define-key *my-map* (kbd "n") "chrome-incognito")
-(define-key *my-map* (kbd "w") "weather")
 
 (defun rofi (mode)
   (run-shell-command (concat "rofi -show " mode)))
@@ -318,21 +346,21 @@
 				      "^B^5%g^b "
 				      "^B^6%W^b "
 				      "^> "
-				      ;; " ^7| "
-				      ;; "^B^6%C^b "
-				      ;; "^7| "
-				      ;; "^B^6%M^b "
-				      ;; "^7| "
-				      ;; "^B^6%l^b "
+				      " ^7| "
+				      "^B^6%C^b "
 				      "^7| "
-				      ;; "^B%B^b "
-				      "^B"
-				      '(:eval (get-battery))
-				      "^b "
+				      "^B^6%M^b "
+				      "^7| "
+				      "^B^6%l^b "
+				      "^7| "
+				      "^B%B^b "
+				      ;; "^B"
+				      ;; '(:eval (get-battery))
+				      ;; "^b "
 				      "^7| "
 				      "^B^7%d^b "
 				      "^7| "
-				      "                 "))
+				      "                "))
 
 (setf *time-modeline-string* "%a %b %e  %k:%M:%S")
 
@@ -340,8 +368,9 @@
 
 (defcommand toggle-all-mode-lines () ()
     (loop for head in (screen-heads (current-screen)) do
-      (toggle-mode-line (current-screen) head)))
+	  (toggle-mode-line (current-screen) head))
+    (stumptray::stumptray))
 
 (toggle-all-mode-lines)
 
-(stumptray::stumptray)
+;; (stumptray::stumptray)
