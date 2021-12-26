@@ -10,4 +10,6 @@ if nc -zw1 google.com 443; then
     git push
     git fetch origin
     git reset --hard origin/master
+    cd ~/.stumpwm.d
+    git submodule update
 fi
