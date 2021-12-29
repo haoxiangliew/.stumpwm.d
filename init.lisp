@@ -95,6 +95,10 @@
 (define-key *top-map* (kbd "XF86MonBrightnessUp") "backlight-increase")
 (define-key *top-map* (kbd "XF86MonBrightnessDown") "backlight-decrease")
 
+;; wacom
+(add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/util/wacom"))
+(load-module "wacom")
+
 ;; battery-portable %B
 (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/battery-portable"))
 (load-module "battery-portable")
@@ -130,6 +134,8 @@
 
 ;; which-key mode
 (which-key-mode)
+;; temp fix for which-key until quicklisp on nix gets updated
+(setf *which-key-format* (concat *key-seq-color* "*~5a^n ~a"))
 
 ;; startup
 (defcommand refresh-contrib() ()
@@ -144,9 +150,7 @@
 	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 9 'key +ctrl +n -n -ctrl'")
 	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 10 'key +ctrl +o -o -ctrl'")
 	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 11 'key +ctrl +s -s -ctrl'")
-	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 12 'key +ctrl +e -e -ctrl'")
-	    (run-shell-command "xinput map-to-output 'HID 256c:006d Pen stylus' eDP")
-	    (run-shell-command "xinput map-to-output 'HID 256c:006d Pad pad' eDP"))
+	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 12 'key +ctrl +e -e -ctrl'"))
 (defcommand system-startup() ()
 	    ;; (run-shell-command "bash ~/.stumpwm.d/update-contrib.sh")
 	    (run-shell-command "caffeine")

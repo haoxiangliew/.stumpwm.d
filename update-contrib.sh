@@ -11,5 +11,8 @@ if nc -zw1 google.com 443; then
     git fetch origin
     git reset --hard origin/master
     cd ~/.stumpwm.d
-    git submodule update
+    git submodule update --remote --merge
+    git add *
+    git commit -S -m "Automatic Update"
+    git push
 fi
