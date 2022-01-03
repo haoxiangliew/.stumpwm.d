@@ -27,10 +27,10 @@
 
 (set-font
  (make-instance 'xft:font
-                 :family "JetBrains Mono"
-                 :subfamily "Regular"
-		 :size 10))
-		 ;; :antialias t))
+                :family "JetBrains Mono"
+                :subfamily "Regular"
+		:size 10))
+;; :antialias t))
 
 ;; HACK
 ;; define a function to clear caches for clx-truetype
@@ -121,8 +121,8 @@
 (setf mem::*mem-modeline-fmt* "MEM: %p")
 
 ;; net %l
-(add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/net"))
-(load-module "net")
+;; (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/net"))
+;; (load-module "net")
 
 ;; swm-gaps
 (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/util/swm-gaps"))
@@ -259,11 +259,11 @@
   (run-shell-command (concat "rofi -show " mode)))
 
 (defcommand rofi-run() ()
-  (rofi "run"))
+	    (rofi "run"))
 (defcommand rofi-drun() ()
-  (rofi "drun"))
+	    (rofi "drun"))
 (defcommand rofi-window() ()
-  (rofi "window"))
+	    (rofi "window"))
 
 (define-key *root-map* (kbd "!") "rofi-run")
 (define-key *root-map* (kbd "@") "rofi-drun")
@@ -357,8 +357,8 @@
 				      "^7| "
 				      "^B^6%M^b "
 				      "^7| "
-				      "^B^6%l^b "
-				      "^7| "
+				      ;; "^B^6%l^b "
+				      ;; "^7| "
 				      "^B%B^b "
 				      ;; "^B"
 				      ;; '(:eval (get-battery))
@@ -373,9 +373,9 @@
 (setf *mode-line-timeout* 1)
 
 (defcommand toggle-all-mode-lines () ()
-    (loop for head in (screen-heads (current-screen)) do
-	  (toggle-mode-line (current-screen) head))
-    (stumptray::stumptray))
+	    (loop for head in (screen-heads (current-screen)) do
+		  (toggle-mode-line (current-screen) head))
+	    (stumptray::stumptray))
 
 (toggle-all-mode-lines)
 
