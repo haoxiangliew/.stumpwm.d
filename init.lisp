@@ -1,52 +1,52 @@
 ;; haoxiangliew's StumpWM configuration
 
-(require :clx-truetype)
+;; (require :clx-truetype)
 (require :xembed)
 
-(in-package :clx-truetype)
+;; (in-package :clx-truetype)
 
-(defparameter +font-cache-filename+
-  #.(merge-pathnames "font-cache.sexp"
-                     (merge-pathnames ".fonts/" (user-homedir-pathname))))
+;; (defparameter +font-cache-filename+
+;;   #.(merge-pathnames "font-cache.sexp"
+;;                      (merge-pathnames ".fonts/" (user-homedir-pathname))))
 
-(setq *font-dirs*
-      (append (list
-	       (namestring "/usr/share/fonts")
-	       (namestring "/run/current-system/sw/share/X11/fonts"))
-	      *font-dirs*))
+;; (setq *font-dirs*
+;;       (append (list
+;; 	       (namestring "/usr/share/fonts")
+;; 	       (namestring "/run/current-system/sw/share/X11/fonts"))
+;; 	      *font-dirs*))
 
 (in-package :stumpwm)
 
-;; ttf-fonts
-(add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/util/ttf-fonts"))
-(load-module "ttf-fonts")
+;; ttf-fonts (disabled due to performance issues)
+;; (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/util/ttf-fonts"))
+;; (load-module "ttf-fonts")
 
-(if (not (find "JetBrains Mono" (xft:get-font-families)
-               :test #'equal))
-    (xft:cache-fonts))
+;; (if (not (find "JetBrains Mono" (xft:get-font-families)
+;;                :test #'equal))
+;;     (xft:cache-fonts))
 
-(set-font
- (make-instance 'xft:font
-                :family "JetBrains Mono"
-                :subfamily "Regular"
-		:size 10))
-;; :antialias t))
+;; (set-font
+;;  (make-instance 'xft:font
+;;                 :family "JetBrains Mono"
+;;                 :subfamily "Regular"
+;; 		:size 10))
+;; ;; :antialias t))
 
 ;; HACK
 ;; define a function to clear caches for clx-truetype
 ;; run at startup and on a timer to prevent memory leaks
-(defcommand clx-clean() ()
-	    (lambda ()
-	      (loop for font in (screen-fonts (current-screen))
-		    when (typep font 'xft:font)
-		    do (clrhash (xft::font-string-line-bboxes font))
-		    (clrhash (xft::font-string-line-alpha-maps font))
-		    (clrhash (xft::font-string-bboxes font))
-		    (clrhash (xft::font-string-alpha-maps font)))))
+;; (defcommand clx-clean() ()
+;; 	    (lambda ()
+;; 	      (loop for font in (screen-fonts (current-screen))
+;; 		    when (typep font 'xft:font)
+;; 		    do (clrhash (xft::font-string-line-bboxes font))
+;; 		    (clrhash (xft::font-string-line-alpha-maps font))
+;; 		    (clrhash (xft::font-string-bboxes font))
+;; 		    (clrhash (xft::font-string-alpha-maps font)))))
 
-(run-with-timer 900 900 (clx-clean))
+;; (run-with-timer 900 900 (clx-clean))
 
-;; (set-font "-misc-jetbrains mono-medium-r-normal-*-13-*-*-*-m-0-iso10646-1")
+(set-font "-misc-jetbrains mono-medium-r-normal-*-13-*-*-*-m-0-iso10646-1")
 
 ;; async-run
 (defparameter *async-shell* (uiop:launch-program "bash" :input :stream :output :stream))
@@ -99,6 +99,8 @@
 (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/util/wacom"))
 (load-module "wacom")
 
+(setf wacom::*landscape-rotate* "none")
+
 ;; battery-portable %B
 (add-to-load-path (concat "~/.stumpwm.d/stumpwm-contrib/modeline/battery-portable"))
 (load-module "battery-portable")
@@ -142,7 +144,7 @@
 	    (run-shell-command "kitty -e '/home/haoxiangliew/.stumpwm.d/update-contrib.sh'"))
 (defcommand system-refresh() ()
 	    (run-shell-command "autorandr --change")
-	    (run-shell-command "feh --bg-scale ~/haoxiangliew/Wallpapers/eboy-dracula-tokyo.png")
+	    (run-shell-command "feh --bg-scale ~/haoxiangliew/Wallpapers/open-sourcerer-dracula.png")
 	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 1 'key +ctrl +z -z -ctrl'")
 	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 2 'key +ctrl +y -y -ctrl'")
 	    (run-shell-command "xsetwacom --set 'HID 256c:006d Pad pad' Button 3 'key +ctrl +1 -1 -ctrl'")
@@ -154,9 +156,9 @@
 (defcommand system-startup() ()
 	    ;; (run-shell-command "bash ~/.stumpwm.d/update-contrib.sh")
 	    (run-shell-command "caffeine")
-	    (run-shell-command "caprine")
-	    (run-shell-command "discord --start-minimized")
-	    (run-shell-command "feh --bg-scale ~/haoxiangliew/Wallpapers/eboy-dracula-tokyo.png")
+	    (run-shell-command "caprine --enable-accelerated-mjpeg-decode --enable-accelerated-video --ignore-gpu-blacklist --enable-native-gpu-memory-buffers --enable-gpu-rasterization")
+	    (run-shell-command "discord --start-minimized --enable-accelerated-mjpeg-decode --enable-accelerated-video --ignore-gpu-blacklist --enable-native-gpu-memory-buffers --enable-gpu-rasterization")
+	    (run-shell-command "feh --bg-scale ~/haoxiangliew/Wallpapers/open-sourcerer-dracula.png")
 	    (run-shell-command "kitty emacs --daemon")
 	    (run-shell-command "ibus-daemon")
 	    (run-shell-command "nm-applet")
@@ -172,7 +174,7 @@
 
 (system-refresh)
 (system-startup)
-(clx-clean)
+;; (clx-clean)
 
 ;; set prefix key to Super + t
 (set-prefix-key (kbd "s-t"))
@@ -246,9 +248,13 @@
 (define-key *root-map* (kbd "O") '*my-map*)
 
 (defcommand chrome() ()
-	    (run-shell-command "google-chrome-stable --enable-features=VaapiVideoDecoder,WebUIDarkMode --use-gl=desktop --disable-features=UseOzonePlatform --force-dark-mode"))
+	    (run-shell-command "google-chrome-unstable --enable-features=VaapiVideoDecoder,VaapiVideoEncoder,WebUIDarkMode --use-gl=desktop --force-dark-mode"))
 (defcommand chrome-incognito() ()
-	    (run-shell-command (concat "google-chrome-stable --enable-features=VaapiVideoDecoder,WebUIDarkMode --use-gl=desktop --disable-features=UseOzonePlatform --force-dark-mode" " -incognito")))
+	    (run-shell-command (concat "google-chrome-unstable --enable-features=VaapiVideoDecoder,VaapiVideoEncoder,WebUIDarkMode --use-gl=desktop --force-dark-mode -incognito")))
+(defcommand firefox() ()
+	    (run-shell-command "firefox"))
+(defcommand firefox-private() ()
+	    (run-shell-command "firefox -private-window"))
 (defcommand lock() ()
 	    (run-shell-command "xautolock -locknow"))
 
@@ -261,13 +267,13 @@
 (defcommand rofi-run() ()
 	    (rofi "run"))
 (defcommand rofi-drun() ()
-	    (rofi "drun"))
+	    (rofi "drun -theme ~/.config/rofi/launchpad.rasi"))
 (defcommand rofi-window() ()
 	    (rofi "window"))
 
 (define-key *root-map* (kbd "!") "rofi-run")
 (define-key *root-map* (kbd "@") "rofi-drun")
-(define-key *root-map* (kbd "#") "rofi-window")
+(define-key *root-map* (kbd "\"") "rofi-window")
 
 (define-key *root-map* (kbd "ESC") "system-refresh")
 
@@ -366,7 +372,7 @@
 				      "^7| "
 				      "^B^7%d^b "
 				      "^7| "
-				      "                "))
+				      "                  "))
 
 (setf *time-modeline-string* "%a %b %e  %k:%M:%S")
 
